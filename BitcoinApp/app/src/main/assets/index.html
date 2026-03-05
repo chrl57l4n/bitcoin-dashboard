@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>₿ Bitcoin · USD</title>
+  <style>
+    :root {
+      --bg:       #070a0f;
+      --bg2:      #0c1119;
+      --bg3:      #111b28;
+      --border:   #1a2538;
+      --border2:  #243248;
+      --btc:      #f7931a;
+      --btc-dim:  rgba(247,147,26,0.12);
+      --btc-glow: rgba(247,147,26,0.25);
+      --text:     #dde4f0;
+      --muted:    #46566e;
+      --muted2:   #7b90ae;
+      --green:    #11e88c;
+      --red:      #f24060;
+      --green-dim:rgba(17,232,140,0.12);
+      --red-dim:  rgba(242,64,96,0.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Subtle dot-grid background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(247,147,26,0.07) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Bottom radial glow */
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 400px;
+      background: radial-gradient(ellipse, rgba(247,147,26,0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      position: relative; z-index: 1;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 36px 28px 56px;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 44px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .btc-id {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btc-coin {
+      width: 52px; height: 52px;
+      background: linear-gradient(140deg, #f9a32a 0%, #f7931a 50%, #d4700d 100%);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: system-ui, sans-serif;
+      font-size: 26px;
+      color: #1a0800;
+      box-shadow:
+        0 0 0 1px rgba(247,147,26,0.3),
+        0 0 20px var(--btc-glow),
+        0 0 60px rgba(247,147,26,0.08);
+      flex-shrink: 0;
+    }
+
+    .btc-title {
+      display: flex; flex-direction: column; gap: 3px;
+    }
+
+    .btc-name {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      line-height: 1;
+    }
+
+    .btc-sub {
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .live-pill {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 14px;
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      background: rgba(17,27,40,0.8);
+      font-family: system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      color: var(--muted2);
+      backdrop-filter: blur(8px);
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: blink 2.4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.2; }
+    }
+
+    /* ── Price ──────────────────────────────────── */
+    .price-section { margin-bottom: 36px; }
+
+    .price-display {
+      font-family: system-ui, sans-serif;
+      font-size: clamp(56px, 9vw, 96px);
+      line-height: 0.88;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      transition: color 0.4s;
+    }
+
+    .price-display.ghost { color: var(--border2); }
+
+    .price-meta {
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .price-change {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .price-change.up   { color: var(--green); }
+    .price-change.down { color: var(--red); }
+
+    .change-badge {
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .up   .change-badge { background: var(--green-dim); }
+    .down .change-badge { background: var(--red-dim); }
+
+    .tf-range-label {
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── Timeframe ──────────────────────────────── */
+    .tf-bar {
+      display: flex; gap: 5px;
+      margin-bottom: 18px;
+    }
+
+    .tf-btn {
+      padding: 7px 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      border-radius: 7px;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      position: relative;
+    }
+
+    .tf-btn:hover {
+      border-color: var(--border2);
+      color: var(--muted2);
+    }
+
+    .tf-btn.active {
+      border-color: var(--btc);
+      color: var(--btc);
+      background: var(--btc-dim);
+    }
+
+    /* ── Chart ──────────────────────────────────── */
+    .chart-shell {
+      position: relative;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    /* Top-edge accent line */
+    .chart-shell::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(247,147,26,0.4) 40%, rgba(247,147,26,0.4) 60%, transparent 100%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    #chart, #sentChart {
+      display: block;
+      width: 100%;
+      cursor: crosshair;
+    }
+
+    /* Loading / Error overlay */
+    .chart-overlay {
+      height: 420px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    .spinner {
+      width: 30px; height: 30px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--btc);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg { color: var(--red); font-size: 13px; }
+    .retry-btn {
+      padding: 7px 22px;
+      border: 1px solid var(--red);
+      background: transparent;
+      color: var(--red);
+      border-radius: 7px;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      transition: background 0.15s;
+    }
+    .retry-btn:hover { background: var(--red-dim); }
+
+    /* ── Tooltip ─────────────────────────────────── */
+    .tooltip {
+      position: absolute;
+      background: rgba(11,17,28,0.96);
+      border: 1px solid var(--border2);
+      border-radius: 9px;
+      padding: 11px 16px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.12s, transform 0.12s;
+      z-index: 20;
+      min-width: 168px;
+      backdrop-filter: blur(10px);
+    }
+    .tooltip.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .tt-price {
+      font-family: system-ui, sans-serif;
+      font-size: 15px; font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .tt-date {
+      font-family: system-ui, sans-serif;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Stats grid ─────────────────────────────── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 18px 20px;
+      transition: border-color 0.2s;
+    }
+    .stat:hover { border-color: var(--border2); }
+
+    .stat-label {
+      font-family: system-ui, sans-serif;
+      font-size: 11px; font-weight: 400;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 9px;
+    }
+
+    .stat-val {
+      font-family: system-ui, sans-serif;
+      font-size: 17px; font-weight: 500;
+      color: var(--text);
+    }
+    .stat-val.up   { color: var(--green); }
+    .stat-val.down { color: var(--red); }
+
+    /* ── Responsive ─────────────────────────────── */
+    @media (max-width: 700px) {
+      .app { padding: 20px 16px 40px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .header { margin-bottom: 28px; }
+    }
+    @media (max-width: 440px) {
+      .tf-btn { padding: 6px 12px; font-size: 10px; }
+      .btc-coin { width: 42px; height: 42px; font-size: 20px; }
+    }
+
+    /* ── Fear & Greed Index ─────────────────────── */
+    .fng-section {
+      margin-bottom: 28px;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .fng-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .fng-card:hover { border-color: var(--border2); }
+    .fng-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(247,147,26,0.3), transparent);
+    }
+
+    .fng-label {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .fng-gauge-wrap {
+      position: relative;
+      width: 180px;
+      height: 100px;
+    }
+    .fng-gauge-wrap canvas { display: block; }
+
+    .fng-center {
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .fng-value {
+      font-size: 44px;
+      font-weight: 700;
+      line-height: 1;
+      transition: color 0.5s;
+    }
+
+    .fng-status {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-top: 2px;
+    }
+
+    .fng-history-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 24px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .fng-history-card:hover { border-color: var(--border2); }
+    .fng-history-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(247,147,26,0.3), transparent);
+    }
+
+    .fng-history-title {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* ── News Feed ───────────────────────────────── */
+    .news-section { margin-top: 28px; }
+
+    .news-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .news-title {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+
+    .news-refresh {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .news-refresh:hover { color: var(--btc); }
+
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .news-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s, transform 0.15s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .news-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-2px);
+      background: var(--bg3);
+    }
+
+    .news-source-name {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--btc);
+    }
+
+    .news-time {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .news-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .news-card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .news-sentiment-tag {
+      align-self: flex-start;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 5px;
+    }
+    .news-sentiment-tag.bullish { background: var(--green-dim); color: var(--green); }
+    .news-sentiment-tag.bearish { background: var(--red-dim);   color: var(--red);   }
+    .news-sentiment-tag.neutral { background: var(--btc-dim);   color: var(--btc);   }
+
+    .news-loading {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 48px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 900px) { .news-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .news-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .fng-section { grid-template-columns: 1fr; } }
+
+    /* ── Sentiment Section ──────────────────────── */
+    .sent-section { margin-top: 28px; }
+
+    .sent-header {
+      display: flex; align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap; gap: 8px;
+    }
+
+    .sent-title {
+      font-family: system-ui, sans-serif;
+      font-size: 13px; font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+
+    .sent-legend {
+      display: flex; gap: 18px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px; color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .ldot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .ldot.retail { background: #e05040; }
+    .ldot.inst   { background: #7b90ae; }
+    .ldot.ibit   { background: #f0b429; }
+
+    .sent-gauges {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 14px;
+    }
+
+    .gauge-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 16px 20px;
+      transition: border-color 0.2s;
+    }
+    .gauge-card:hover { border-color: var(--border2); }
+
+    .gauge-label {
+      font-family: system-ui, sans-serif;
+      font-size: 11px; font-weight: 400;
+      letter-spacing: 0.14em; color: var(--muted);
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+
+    .gauge-row {
+      display: flex; align-items: baseline;
+      gap: 10px; margin-bottom: 10px;
+    }
+
+    .gauge-pct {
+      font-family: system-ui, sans-serif;
+      font-size: 38px; line-height: 1;
+      color: var(--text); transition: color 0.3s;
+    }
+    .gauge-pct.up   { color: var(--green); }
+    .gauge-pct.down { color: var(--red); }
+
+    .gauge-status {
+      font-family: system-ui, sans-serif;
+      font-size: 14px; font-weight: 500;
+    }
+    .gauge-status.up   { color: var(--green); }
+    .gauge-status.down { color: var(--red); }
+
+    .gauge-track {
+      height: 3px; background: var(--border);
+      border-radius: 999px; overflow: hidden;
+    }
+    .gauge-fill {
+      height: 100%; border-radius: 999px;
+      transition: width 0.7s cubic-bezier(.4,0,.2,1), background 0.3s;
+    }
+
+    @media (max-width: 500px) {
+      .sent-gauges { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="btc-id">
+      <div class="btc-coin">₿</div>
+      <div class="btc-title">
+        <div class="btc-name">Bitcoin</div>
+        <div class="btc-sub">BTC / USD · CoinGecko</div>
+      </div>
+    </div>
+    <div class="live-pill">
+      <div class="live-dot"></div>
+      LIVE
+    </div>
+  </header>
+
+  <!-- Price -->
+  <section class="price-section">
+    <div class="price-display ghost" id="priceDisplay">$——,———.——</div>
+    <div class="price-meta">
+      <div class="price-change" id="priceChange">
+        <span id="changeAbs">——</span>
+        <span class="change-badge" id="changePct">——</span>
+      </div>
+      <div class="tf-range-label" id="rangeLabel">Lade Daten…</div>
+    </div>
+  </section>
+
+  <!-- Timeframe selector -->
+  <div class="tf-bar">
+    <button class="tf-btn active" data-days="1"   data-name="STUNDEN">STUNDEN</button>
+    <button class="tf-btn"        data-days="30"  data-name="TAGE">TAGE</button>
+    <button class="tf-btn"        data-days="365" data-name="WOCHEN">WOCHEN</button>
+    <button class="tf-btn"        data-days="1825" data-name="JAHRE">JAHRE</button>
+  </div>
+
+  <!-- Chart -->
+  <div class="chart-shell" id="chartShell">
+    <div class="chart-overlay" id="chartOverlay">
+      <div class="spinner"></div>
+      <span>Marktdaten werden geladen…</span>
+    </div>
+    <canvas id="chart" style="display:none;"></canvas>
+    <div class="tooltip" id="tooltip">
+      <div class="tt-price" id="ttPrice"></div>
+      <div class="tt-date"  id="ttDate"></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Periode Hoch</div>
+      <div class="stat-val" id="statHigh">——</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Periode Tief</div>
+      <div class="stat-val" id="statLow">——</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Veränderung</div>
+      <div class="stat-val" id="statChange">——</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">24H Volumen</div>
+      <div class="stat-val" id="statVol">——</div>
+    </div>
+  </div>
+
+  <!-- Fear & Greed Index -->
+  <div class="fng-section" style="margin-top:28px;">
+    <div class="fng-card">
+      <div class="fng-label">Fear &amp; Greed Index · Heute</div>
+      <div class="fng-gauge-wrap">
+        <canvas id="fngGauge" width="180" height="100"></canvas>
+        <div class="fng-center">
+          <div class="fng-value" id="fngValue">—</div>
+          <div class="fng-status" id="fngStatus">Lade…</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);letter-spacing:.08em;">Quelle: alternative.me</div>
+    </div>
+    <div class="fng-history-card">
+      <div class="fng-history-title">Fear &amp; Greed · 30 Tage Verlauf</div>
+      <canvas id="fngHistory" style="width:100%;display:block;"></canvas>
+    </div>
+  </div>
+
+  <!-- News Feed -->
+  <div class="news-section">
+    <div class="news-header">
+      <div class="news-title">Bitcoin News &amp; Sentiment</div>
+      <button class="news-refresh" onclick="loadNews()">↻ Aktualisieren</button>
+    </div>
+    <div class="news-grid" id="newsGrid">
+      <div class="news-loading">
+        <div class="spinner"></div>
+        <span>News werden geladen…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sentiment Section -->
+  <div class="sent-section">
+    <div class="sent-header">
+      <div class="sent-title">Marktsentiment</div>
+      <div class="sent-legend">
+        <span><span class="ldot retail"></span>Retail (&lt; 1 BTC)</span>
+        <span><span class="ldot inst"></span>Institutionell (≥ 1 BTC)</span>
+        <span><span class="ldot ibit"></span>BlackRock IBIT</span>
+      </div>
+    </div>
+
+    <div class="sent-gauges">
+      <div class="gauge-card">
+        <div class="gauge-label">Retail · &lt; 1 BTC Kaufdruck</div>
+        <div class="gauge-row">
+          <div class="gauge-pct" id="retailPct">—</div>
+          <div class="gauge-status" id="retailStatus">—</div>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" id="retailFill"></div></div>
+      </div>
+      <div class="gauge-card">
+        <div class="gauge-label">Institutionell · ≥ 1 BTC Kaufdruck</div>
+        <div class="gauge-row">
+          <div class="gauge-pct" id="instPct">—</div>
+          <div class="gauge-status" id="instStatus">—</div>
+        </div>
+        <div class="gauge-track"><div class="gauge-fill" id="instFill"></div></div>
+      </div>
+    </div>
+
+    <div class="chart-shell" id="sentShell">
+      <div class="chart-overlay" id="sentOverlay">
+        <div class="spinner"></div>
+        <span>Sentiment wird geladen…</span>
+      </div>
+      <canvas id="sentChart" style="display:none;"></canvas>
+      <div class="tooltip" id="sentTooltip">
+        <div class="tt-price" id="ttRetail"  style="font-size:13px;color:#e05040;"></div>
+        <div class="tt-price" id="ttInst"    style="font-size:13px;color:#8c9baf;"></div>
+        <div class="tt-price" id="ttIBIT"    style="font-size:13px;color:#f0b429;"></div>
+        <div class="tt-date"  id="ttSentDate"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════════════════════
+const PAD   = { top: 28, right: 76, bottom: 44, left: 18 };
+const ANIM  = 750; // ms
+const CHART_H = 420;
+
+// ════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════
+const S = {
+  data:         [],
+  rawKlines:    [],
+  sentData:     [],   // [{ts, retailPct, instPct}] per kline bar
+  ibitData:     [],   // [{ts, price}] from Yahoo Finance
+  sentSmoothed: { retail: [], inst: [], ibit: [], ibitRaw: [] },
+  tf:           '1',
+  hoverIdx:     -1,
+  sentHoverIdx: -1,
+  isPos:        true,
+  animProg:     1,
+};
+
+// ════════════════════════════════════════════════════════════
+//  ELEMENTS
+// ════════════════════════════════════════════════════════════
+const canvas   = document.getElementById('chart');
+const ctx      = canvas.getContext('2d');
+const overlay  = document.getElementById('chartOverlay');
+const tooltip  = document.getElementById('tooltip');
+const ttPrice  = document.getElementById('ttPrice');
+const ttDate   = document.getElementById('ttDate');
+
+// ════════════════════════════════════════════════════════════
+//  FORMATTERS
+// ════════════════════════════════════════════════════════════
+const usd = n => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const big  = n => {
+  if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
+  if (n >= 1e9)  return '$' + (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6)  return '$' + (n/1e6).toFixed(2) + 'M';
+  return '$' + n.toFixed(0);
+};
+
+function fmtAxis(ts, tf) {
+  const d = new Date(ts);
+  if (tf === '1')   return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  if (tf === '30')  return d.toLocaleDateString('de-DE',  { day: '2-digit', month: 'short' });
+  if (tf === '365') return d.toLocaleDateString('de-DE',  { month: 'short', year: '2-digit' });
+  return d.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' });
+}
+
+function fmtTooltip(ts, tf) {
+  const d = new Date(ts);
+  if (tf === '1') {
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: 'long' })
+      + ' · ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+  }
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+// ════════════════════════════════════════════════════════════
+//  API  (Binance – kein API-Key erforderlich)
+// ════════════════════════════════════════════════════════════
+const BINANCE = 'https://api.binance.com/api/v3';
+
+const TF_MAP = {
+  '1':    { interval: '1h', limit: 24 },
+  '30':   { interval: '1d', limit: 30 },
+  '365':  { interval: '1w', limit: 52 },
+  '1825': { interval: '1M', limit: 60 },
+};
+
+async function fetchChart(days) {
+  const { interval, limit } = TF_MAP[days];
+  const url = `${BINANCE}/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  const klines = await r.json();
+  S.rawKlines = klines; // store for retail sentiment (taker volume)
+  // klines: [openTime, open, high, low, close, vol, ..., takerBuyVol, ...]
+  return klines.map(k => [k[0], parseFloat(k[4])]);
+}
+
+async function fetchTicker() {
+  try {
+    const r = await fetch(`${BINANCE}/ticker/24hr?symbol=BTCUSDT`);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+const IBIT_TF_MAP = {
+  '1':    { range: '5d',  interval: '30m' },  // intraday for 24h BTC view
+  '30':   { range: '1mo', interval: '1d'  },
+  '365':  { range: '1y',  interval: '1wk' },
+  '1825': { range: '2y',  interval: '1mo' },
+};
+
+async function fetchIBIT(tf) {
+  const { range, interval } = IBIT_TF_MAP[tf] || IBIT_TF_MAP['30'];
+
+  const parseYahoo = json => {
+    const result = json?.chart?.result?.[0];
+    if (!result) return null;
+    const tss    = result.timestamp || [];
+    const closes = result.indicators?.quote?.[0]?.close || [];
+    const data   = tss
+      .map((ts, i) => ({ ts: ts * 1000, price: closes[i] }))
+      .filter(d => d.price !== null && d.price !== undefined);
+    return data.length ? data : null;
+  };
+
+  const base = `https://query2.finance.yahoo.com/v8/finance/chart/IBIT?interval=${interval}&range=${range}`;
+
+  // Attempt order: direct → CORS proxy (Yahoo often blocks file:// origin directly)
+  const attempts = [
+    base,
+    `https://query1.finance.yahoo.com/v8/finance/chart/IBIT?interval=${interval}&range=${range}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(base)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(base)}`,
+  ];
+
+  for (const url of attempts) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      const json = await r.json();
+      const data = parseYahoo(json);
+      if (data) return data;
+    } catch { /* try next */ }
+  }
+  return [];
+}
+
+// Align IBIT prices to sentData timestamps; returns cumulative-return % array
+function buildIBITLine(sentData, ibitData) {
+  if (!ibitData.length) return sentData.map(() => null);
+  const aligned = sentData.map(sd => {
+    let best = null, bestDiff = Infinity;
+    for (const id of ibitData) {
+      const diff = Math.abs(id.ts - sd.ts);
+      if (diff < bestDiff) { bestDiff = diff; best = id; }
+    }
+    return (best && bestDiff < 8 * 24 * 3600 * 1000) ? best.price : null;
+  });
+  const firstPrice = aligned.find(p => p !== null);
+  if (!firstPrice) return sentData.map(() => null);
+  return aligned.map(p => p !== null ? ((p / firstPrice) - 1) * 100 : null);
+}
+
+// ════════════════════════════════════════════════════════════
+//  CHART DRAWING
+// ════════════════════════════════════════════════════════════
+function getSize() {
+  const W = document.getElementById('chartShell').clientWidth;
+  const H = CHART_H;
+  const dpr = window.devicePixelRatio || 1;
+  return { W, H, dpr };
+}
+
+function draw(prog) {
+  if (!S.data.length) return;
+  prog = (prog !== undefined) ? prog : S.animProg;
+
+  const { W, H, dpr } = getSize();
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  ctx.clearRect(0, 0, W, H);
+
+  const N     = S.data.length;
+  const visN  = Math.max(2, Math.ceil(N * prog));
+  const pw    = W - PAD.left - PAD.right;
+  const ph    = H - PAD.top  - PAD.bottom;
+
+  const prices = S.data.map(d => d[1]);
+  const times  = S.data.map(d => d[0]);
+
+  const vMin0 = Math.min(...prices.slice(0, visN));
+  const vMax0 = Math.max(...prices.slice(0, visN));
+  const pRange = vMax0 - vMin0 || 1;
+  const vPad  = pRange * 0.09;
+  const vMin  = vMin0 - vPad;
+  const vMax  = vMax0 + vPad;
+  const vRange = vMax - vMin;
+
+  const xOf = i => PAD.left + (i / (N - 1)) * pw;
+  const yOf = p => PAD.top  + ph * (1 - (p - vMin) / vRange);
+
+  // Colors driven by performance
+  const lineC   = S.isPos ? '#11e88c' : '#f24060';
+  const gradTop = S.isPos ? 'rgba(17,232,140,0.16)' : 'rgba(242,64,96,0.16)';
+  const gradBot = 'rgba(0,0,0,0)';
+
+  // ── Y-axis grid + price labels ──
+  const GRIDS = 5;
+  for (let i = 0; i <= GRIDS; i++) {
+    const y = PAD.top + (i / GRIDS) * ph;
+    const p = vMax - (i / GRIDS) * vRange;
+
+    // Grid line
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, y);
+    ctx.lineTo(PAD.left + pw, y);
+    ctx.strokeStyle = '#1a2538';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Price label
+    ctx.fillStyle = '#46566e';
+    ctx.font = '400 11px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('$' + Math.round(p).toLocaleString('de-DE'), PAD.left + pw + 9, y + 4);
+  }
+
+  // ── X-axis time labels ──
+  const XL = Math.min(5, visN - 1);
+  ctx.fillStyle = '#46566e';
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= XL; i++) {
+    const idx = Math.round((i / XL) * (visN - 1));
+    ctx.fillText(fmtAxis(times[idx], S.tf), xOf(idx), H - 10);
+  }
+
+  // ── Gradient fill ──
+  const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + ph);
+  grad.addColorStop(0, gradTop);
+  grad.addColorStop(1, gradBot);
+
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(S.data[0][1]));
+  for (let i = 1; i < visN; i++) ctx.lineTo(xOf(i), yOf(S.data[i][1]));
+  ctx.lineTo(xOf(visN - 1), PAD.top + ph);
+  ctx.lineTo(xOf(0), PAD.top + ph);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // ── Price line ──
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(S.data[0][1]));
+  for (let i = 1; i < visN; i++) ctx.lineTo(xOf(i), yOf(S.data[i][1]));
+  ctx.strokeStyle = lineC;
+  ctx.lineWidth = 1.8;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // ── Hover crosshair ──
+  if (S.hoverIdx >= 0 && S.hoverIdx < visN) {
+    const hx = xOf(S.hoverIdx);
+    const hy = yOf(S.data[S.hoverIdx][1]);
+
+    // Dashed vertical
+    ctx.save();
+    ctx.setLineDash([3, 6]);
+    ctx.beginPath();
+    ctx.moveTo(hx, PAD.top);
+    ctx.lineTo(hx, PAD.top + ph);
+    ctx.strokeStyle = '#243248';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+
+    // Dot
+    ctx.beginPath();
+    ctx.arc(hx, hy, 5, 0, Math.PI * 2);
+    ctx.fillStyle = lineC;
+    ctx.fill();
+    ctx.strokeStyle = '#070a0f';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Glow ring
+    ctx.beginPath();
+    ctx.arc(hx, hy, 10, 0, Math.PI * 2);
+    ctx.strokeStyle = lineC + '3a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+  } else if (prog >= 1) {
+    // Live endpoint dot
+    const ex = xOf(N - 1);
+    const ey = yOf(S.data[N - 1][1]);
+
+    ctx.beginPath();
+    ctx.arc(ex, ey, 4, 0, Math.PI * 2);
+    ctx.fillStyle = lineC;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(ex, ey, 9, 0, Math.PI * 2);
+    ctx.strokeStyle = lineC + '3a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  ANIMATION
+// ════════════════════════════════════════════════════════════
+let raf = null;
+
+function animate() {
+  if (raf) cancelAnimationFrame(raf);
+  const t0 = performance.now();
+
+  function frame(now) {
+    const t = Math.min(1, (now - t0) / ANIM);
+    const e = 1 - Math.pow(1 - t, 3); // ease-out cubic
+    S.animProg = e;
+    draw(e);
+    if (t < 1) raf = requestAnimationFrame(frame);
+    else S.animProg = 1;
+  }
+
+  raf = requestAnimationFrame(frame);
+}
+
+// ════════════════════════════════════════════════════════════
+//  HOVER
+// ════════════════════════════════════════════════════════════
+canvas.addEventListener('mousemove', e => {
+  if (!S.data.length) return;
+  const rect = canvas.getBoundingClientRect();
+  const x  = e.clientX - rect.left;
+  const W  = rect.width;
+  const pw = W - PAD.left - PAD.right;
+
+  const ratio = (x - PAD.left) / pw;
+  const idx   = Math.max(0, Math.min(S.data.length - 1, Math.round(ratio * (S.data.length - 1))));
+
+  S.hoverIdx = idx;
+  draw(1);
+
+  // Tooltip content
+  const [ts, price] = S.data[idx];
+  ttPrice.textContent = usd(price);
+  ttDate.textContent  = fmtTooltip(ts, S.tf);
+  tooltip.classList.add('show');
+
+  // Tooltip position
+  const tw  = 180;
+  const H   = rect.height;
+  let tx = x + 16;
+  let ty = Math.max(10, e.clientY - rect.top - 65);
+  if (tx + tw > W - PAD.right) tx = x - tw - 16;
+  if (ty + 80 > H) ty = H - 90;
+  tooltip.style.left = tx + 'px';
+  tooltip.style.top  = ty + 'px';
+});
+
+canvas.addEventListener('mouseleave', () => {
+  S.hoverIdx = -1;
+  tooltip.classList.remove('show');
+  draw(1);
+});
+
+// ── Sentiment chart hover ──
+const sentChartEl = document.getElementById('sentChart');
+
+sentChartEl.addEventListener('mousemove', e => {
+  if (!S.sentData.length) return;
+  const rect = sentChartEl.getBoundingClientRect();
+  const x  = e.clientX - rect.left;
+  const pw = rect.width - SENT_PAD.left - SENT_PAD.right;
+  const N  = S.sentData.length;
+  const idx = Math.max(0, Math.min(N - 1, Math.round(((x - SENT_PAD.left) / pw) * (N - 1))));
+
+  S.sentHoverIdx = idx;
+  drawSentimentChart(S.sentData);
+
+  const d  = S.sentData[idx];
+  const ri = S.sentSmoothed.ibitRaw[idx];
+  const sentTT = document.getElementById('sentTooltip');
+
+  document.getElementById('ttRetail').textContent  =
+    'Retail: '   + (d.retailPct !== null ? d.retailPct.toFixed(1) + '% Kauf' : 'N/A');
+  document.getElementById('ttInst').textContent    =
+    'Inst.: '    + (d.instPct   !== null ? d.instPct.toFixed(1)   + '% Kauf' : 'N/A');
+  document.getElementById('ttIBIT').textContent    =
+    'IBIT ETF: ' + (ri !== null ? (ri >= 0 ? '+' : '') + ri.toFixed(2) + '%' : 'N/A');
+  document.getElementById('ttSentDate').textContent = fmtTooltip(d.ts, S.tf);
+
+  sentTT.classList.add('show');
+
+  const tw = 190, H = rect.height;
+  let tx = x + 16, ty = Math.max(10, e.clientY - rect.top - 90);
+  if (tx + tw > rect.width - SENT_PAD.right) tx = x - tw - 16;
+  if (ty + 110 > H) ty = H - 120;
+  sentTT.style.left = tx + 'px';
+  sentTT.style.top  = ty + 'px';
+});
+
+sentChartEl.addEventListener('mouseleave', () => {
+  S.sentHoverIdx = -1;
+  document.getElementById('sentTooltip').classList.remove('show');
+  drawSentimentChart(S.sentData);
+});
+
+// ════════════════════════════════════════════════════════════
+//  UI UPDATES
+// ════════════════════════════════════════════════════════════
+const RANGE_LABELS = {
+  '1':   '24-Stunden-Verlauf',
+  '30':  '30-Tage-Verlauf',
+  '365': '52-Wochen-Verlauf',
+  '1825': '5-Jahres-Verlauf',
+};
+
+function updateUI(data, ticker, tf) {
+  const prices = data.map(d => d[1]);
+  const first  = prices[0];
+  const last   = prices[prices.length - 1];
+  const dAbs   = last - first;
+  const dPct   = (dAbs / first) * 100;
+  const isUp   = dAbs >= 0;
+  S.isPos = isUp;
+
+  // Price display
+  const pdEl = document.getElementById('priceDisplay');
+  pdEl.textContent = usd(last);
+  pdEl.classList.remove('ghost');
+
+  // Change
+  const chEl = document.getElementById('priceChange');
+  chEl.className = 'price-change ' + (isUp ? 'up' : 'down');
+  document.getElementById('changeAbs').textContent = (isUp ? '+' : '') + usd(dAbs);
+  document.getElementById('changePct').textContent = (isUp ? '+' : '') + dPct.toFixed(2) + '%';
+
+  // Range label
+  document.getElementById('rangeLabel').textContent = RANGE_LABELS[tf] || '';
+
+  // Stats
+  document.getElementById('statHigh').textContent = usd(Math.max(...prices));
+  document.getElementById('statLow').textContent  = usd(Math.min(...prices));
+
+  const scEl = document.getElementById('statChange');
+  scEl.textContent = (isUp ? '+' : '') + dPct.toFixed(2) + '%';
+  scEl.className = 'stat-val ' + (isUp ? 'up' : 'down');
+
+  if (ticker?.quoteVolume) {
+    document.getElementById('statVol').textContent = big(parseFloat(ticker.quoteVolume));
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  SENTIMENT
+// ════════════════════════════════════════════════════════════
+const SENT_PAD = { top: 26, right: 72, bottom: 38, left: 16 };
+const SENT_H   = 360;
+
+// Fetch real aggTrades per kline bar, split by < 1 BTC (retail) vs ≥ 1 BTC (institutional).
+// Uses startTime per bar (no endTime) to avoid Binance's 1h window restriction.
+// Runs BATCH_SIZE bars in parallel to balance speed vs rate limits.
+async function fetchSentimentBars(klines) {
+  const BATCH = 4;
+  const results = [];
+
+  for (let i = 0; i < klines.length; i += BATCH) {
+    const batch = klines.slice(i, i + BATCH);
+    const bRes  = await Promise.all(batch.map(async k => {
+      try {
+        const url    = `${BINANCE}/aggTrades?symbol=BTCUSDT&startTime=${k[0]}&limit=1000`;
+        const r      = await fetch(url);
+        if (!r.ok) return { ts: k[0], retailPct: null, instPct: null };
+        const all    = await r.json();
+        // Filter to this kline's time window only
+        const trades = all.filter(t => t.T <= k[6]);
+
+        // m: false = buyer was taker (buy pressure)
+        // m: true  = seller was taker (sell pressure)
+        const calc = arr => {
+          const buyVol = arr.filter(t => !t.m).reduce((s, t) => s + parseFloat(t.q), 0);
+          const total  = arr.reduce((s, t) => s + parseFloat(t.q), 0);
+          return total > 0 ? (buyVol / total) * 100 : null;
+        };
+
+        const retail = trades.filter(t => parseFloat(t.q) <  1.0);
+        const inst   = trades.filter(t => parseFloat(t.q) >= 1.0);
+        return { ts: k[0], retailPct: calc(retail), instPct: calc(inst) };
+      } catch {
+        return { ts: k[0], retailPct: null, instPct: null };
+      }
+    }));
+    results.push(...bRes);
+  }
+  return results;
+}
+
+function drawSentimentChart(sentData) {
+  const sc    = document.getElementById('sentChart');
+  const sCtx  = sc.getContext('2d');
+  const shell = document.getElementById('sentShell');
+
+  const W   = shell.clientWidth;
+  const H   = SENT_H;
+  const dpr = window.devicePixelRatio || 1;
+  const P   = SENT_PAD;
+
+  sc.width  = W * dpr;
+  sc.height = H * dpr;
+  sc.style.width  = W + 'px';
+  sc.style.height = H + 'px';
+  sCtx.scale(dpr, dpr);
+  sCtx.clearRect(0, 0, W, H);
+
+  const pw = W - P.left - P.right;
+  const ph = H - P.top  - P.bottom;
+  const N  = sentData.length;
+  if (N < 2) return;
+
+  // Net-flow: pct − 50 (+ve = buying, −ve = selling), smoothed
+  const smooth = (arr, w = 2) => arr.map((v, i) => {
+    if (v === null) return null;
+    const win = arr.slice(Math.max(0, i - w), i + w + 1).filter(x => x !== null);
+    return win.reduce((s, x) => s + x, 0) / win.length;
+  });
+  const retailVals = smooth(sentData.map(d => d.retailPct !== null ? d.retailPct - 50 : null));
+  const instVals   = smooth(sentData.map(d => d.instPct   !== null ? d.instPct   - 50 : null));
+
+  // IBIT cumulative return, scaled to fit chart
+  const ibitRaw    = buildIBITLine(sentData, S.ibitData);
+  const ibitAbsMax = Math.max(1, ...ibitRaw.filter(v => v !== null).map(Math.abs));
+  const allSent    = [...retailVals, ...instVals].filter(v => v !== null);
+  const absMax     = allSent.length ? Math.max(15, Math.max(...allSent.map(Math.abs))) : 25;
+  const ibitVals   = ibitRaw.map(v => v !== null ? (v / ibitAbsMax) * (absMax * 0.7) : null);
+
+  // Persist for hover tooltip
+  S.sentSmoothed = { retail: retailVals, inst: instVals, ibit: ibitVals, ibitRaw };
+
+  const midY = P.top + ph / 2;
+  const xOf  = i   => P.left + (i / (N - 1)) * pw;
+  const yOf  = val => midY - (val / absMax) * (ph / 2);
+
+  // ── Zero center line ──
+  sCtx.beginPath();
+  sCtx.moveTo(P.left, midY);
+  sCtx.lineTo(P.left + pw, midY);
+  sCtx.strokeStyle = '#243248';
+  sCtx.lineWidth   = 1;
+  sCtx.stroke();
+
+  // ── Faint grid at ±½ ──
+  [absMax * 0.5, -absMax * 0.5].forEach(v => {
+    const y = yOf(v);
+    sCtx.save();
+    sCtx.setLineDash([3, 6]);
+    sCtx.beginPath();
+    sCtx.moveTo(P.left, y);
+    sCtx.lineTo(P.left + pw, y);
+    sCtx.strokeStyle = '#141e2d';
+    sCtx.lineWidth   = 1;
+    sCtx.stroke();
+    sCtx.restore();
+  });
+
+  // ── Y-axis labels ──
+  sCtx.fillStyle = '#46566e';
+  sCtx.font      = '500 10px system-ui, sans-serif';
+  sCtx.textAlign = 'left';
+  sCtx.fillText('KAUF',    P.left + pw + 9, P.top + 5);
+  sCtx.fillText('0',       P.left + pw + 9, midY + 4);
+  sCtx.fillText('VERKAUF', P.left + pw + 9, P.top + ph + 4);
+
+  // ── Line draw helper ──
+  const drawLine = (vals, color, lw, dashed) => {
+    sCtx.save();
+    if (dashed) sCtx.setLineDash([5, 4]);
+    sCtx.beginPath();
+    let started = false, lastPt = null;
+    for (let i = 0; i < N; i++) {
+      if (vals[i] === null) continue;
+      const x = xOf(i), y = yOf(vals[i]);
+      if (!started) { sCtx.moveTo(x, y); started = true; }
+      else            sCtx.lineTo(x, y);
+      lastPt = { x, y };
+    }
+    if (started) {
+      sCtx.strokeStyle = color;
+      sCtx.lineWidth   = lw;
+      sCtx.lineJoin    = 'round';
+      sCtx.lineCap     = 'round';
+      sCtx.stroke();
+    }
+    sCtx.restore();
+    return lastPt;
+  };
+
+  // ── Label position: first mid-series point far from zero ──
+  const labelPos = (vals, fallback) => {
+    const mid = Math.floor(N / 2);
+    for (let i = mid; i >= 0; i--) {
+      if (vals[i] !== null && Math.abs(vals[i]) > absMax * 0.2) {
+        return { x: xOf(i), y: yOf(vals[i]) };
+      }
+    }
+    return fallback;
+  };
+
+  // ── Draw: IBIT (dashed gold) → inst (gray) → retail (red on top) ──
+  const ibitEnd   = drawLine(ibitVals,   'rgba(240,180,41,0.85)', 2,   true);
+  const instEnd   = drawLine(instVals,   'rgba(140,155,175,0.8)', 1.5, false);
+  const retailEnd = drawLine(retailVals, '#e05040',               2,   false);
+
+  // ── Hover crosshair ──
+  const hi = S.sentHoverIdx;
+  if (hi >= 0 && hi < N) {
+    const hx = xOf(hi);
+    sCtx.save();
+    sCtx.setLineDash([3, 6]);
+    sCtx.beginPath();
+    sCtx.moveTo(hx, P.top);
+    sCtx.lineTo(hx, P.top + ph);
+    sCtx.strokeStyle = '#243248';
+    sCtx.lineWidth   = 1;
+    sCtx.stroke();
+    sCtx.restore();
+
+    const dot = (val, fill) => {
+      if (val === null) return;
+      const hy = yOf(val);
+      sCtx.beginPath();
+      sCtx.arc(hx, hy, 4, 0, Math.PI * 2);
+      sCtx.fillStyle   = fill;
+      sCtx.fill();
+      sCtx.strokeStyle = '#070a0f';
+      sCtx.lineWidth   = 2;
+      sCtx.stroke();
+    };
+    dot(ibitVals[hi],   'rgba(240,180,41,0.9)');
+    dot(instVals[hi],   'rgba(140,155,175,0.9)');
+    dot(retailVals[hi], '#e05040');
+  }
+
+  // ── Inline labels (hidden while hovering) ──
+  if (hi < 0) {
+    sCtx.font = '600 11px system-ui, sans-serif';
+
+    if (ibitEnd) {
+      sCtx.fillStyle = 'rgba(240,180,41,0.8)';
+      sCtx.textAlign = 'right';
+      sCtx.fillText('IBIT', ibitEnd.x - 6, ibitEnd.y - 7);
+    }
+
+    const instP = labelPos(instVals, instEnd);
+    if (instP) {
+      sCtx.fillStyle = 'rgba(140,155,175,0.9)';
+      sCtx.textAlign = 'left';
+      sCtx.fillText('Institutionell', instP.x + 6, instP.y - 6);
+    }
+
+    const rPos = labelPos(retailVals, retailEnd);
+    if (rPos) {
+      sCtx.fillStyle = '#e05040';
+      sCtx.textAlign = 'left';
+      sCtx.fillText('Retail', rPos.x + 6, rPos.y + 14);
+    }
+  }
+
+  // ── X-axis time labels ──
+  sCtx.fillStyle = '#46566e';
+  sCtx.font      = '11px system-ui, sans-serif';
+  sCtx.textAlign = 'center';
+  const XL = Math.min(7, N - 1);
+  for (let i = 0; i <= XL; i++) {
+    const idx = Math.round((i / XL) * (N - 1));
+    sCtx.fillText(fmtAxis(sentData[idx].ts, S.tf), xOf(idx), H - 6);
+  }
+}
+
+function updateGauges(sentData) {
+  if (!sentData.length) return;
+
+  // Average over all non-null bars (smoothed across entire visible period)
+  const avg = key => {
+    const vals = sentData.map(d => d[key]).filter(v => v !== null);
+    return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
+  };
+  const avgR = avg('retailPct');
+  const avgI = avg('instPct');
+
+  const setGauge = (pctId, statId, fillId, val) => {
+    if (val === null) {
+      document.getElementById(pctId).textContent  = 'N/A';
+      document.getElementById(statId).textContent = 'Keine Daten';
+      return;
+    }
+    const up = val >= 50;
+    const pctEl  = document.getElementById(pctId);
+    const statEl = document.getElementById(statId);
+    const fillEl = document.getElementById(fillId);
+    pctEl.textContent  = val.toFixed(1) + '%';
+    pctEl.className    = 'gauge-pct ' + (up ? 'up' : 'down');
+    statEl.textContent = up ? '↑ KAUFT' : '↓ VERKAUFT';
+    statEl.className   = 'gauge-status ' + (up ? 'up' : 'down');
+    fillEl.style.width      = val.toFixed(1) + '%';
+    fillEl.style.background = up ? 'var(--green)' : 'var(--red)';
+  };
+
+  setGauge('retailPct', 'retailStatus', 'retailFill', avgR);
+  setGauge('instPct',   'instStatus',   'instFill',   avgI);
+}
+
+async function loadSentiment() {
+  const sentOverlay = document.getElementById('sentOverlay');
+  const sentCanvas  = document.getElementById('sentChart');
+
+  sentCanvas.style.display  = 'none';
+  sentOverlay.style.display = 'flex';
+  sentOverlay.innerHTML = '<div class="spinner"></div><span>Handelsdaten werden analysiert…</span>';
+
+  try {
+    const [sentData, ibitData] = await Promise.all([
+      fetchSentimentBars(S.rawKlines),
+      fetchIBIT(S.tf),
+    ]);
+    S.sentData = sentData;
+    S.ibitData = ibitData;
+    updateGauges(sentData);
+    drawSentimentChart(sentData);
+    sentOverlay.style.display = 'none';
+    sentCanvas.style.display  = 'block';
+  } catch {
+    sentOverlay.innerHTML = '<span style="color:var(--muted)">Sentiment nicht verfügbar</span>';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  LOAD
+// ════════════════════════════════════════════════════════════
+async function load(days) {
+  // Reset
+  S.hoverIdx     = -1;
+  S.sentHoverIdx = -1;
+  tooltip.classList.remove('show');
+  document.getElementById('sentTooltip').classList.remove('show');
+  canvas.style.display = 'none';
+  overlay.style.display = 'flex';
+  overlay.innerHTML = '<div class="spinner"></div><span>Marktdaten werden geladen…</span>';
+
+  try {
+    const [data, ticker] = await Promise.all([fetchChart(days), fetchTicker()]);
+
+    S.data = data;
+    S.tf   = String(days);
+
+    updateUI(data, ticker, String(days));
+
+    overlay.style.display = 'none';
+    canvas.style.display  = 'block';
+
+    animate();
+    loadSentiment();
+
+  } catch (err) {
+    overlay.innerHTML = `
+      <div class="error-msg">Verbindung fehlgeschlagen</div>
+      <div style="font-family:system-ui,sans-serif;font-size:12px;color:#46566e;letter-spacing:.08em">${err.message}</div>
+      <button class="retry-btn" onclick="load('${days}')">↻ Erneut versuchen</button>
+    `;
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  EVENTS
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll('.tf-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    load(btn.dataset.days);
+  });
+});
+
+window.addEventListener('resize', () => {
+  if (S.data.length && canvas.style.display !== 'none') draw(1);
+  if (S.sentData.length) drawSentimentChart(S.sentData);
+  // Redraw FNG history on resize
+  if (window._fngHistory) drawFngHistory(window._fngHistory);
+});
+
+// ════════════════════════════════════════════════════════════
+//  FEAR & GREED INDEX
+// ════════════════════════════════════════════════════════════
+
+function fngColor(val) {
+  if (val <= 20)  return '#f24060'; // Extreme Fear
+  if (val <= 40)  return '#f07830'; // Fear
+  if (val <= 60)  return '#f7931a'; // Neutral
+  if (val <= 80)  return '#a0c840'; // Greed
+  return '#11e88c';                  // Extreme Greed
+}
+
+function fngLabel(val) {
+  if (val <= 20)  return 'Extreme Angst';
+  if (val <= 40)  return 'Angst';
+  if (val <= 60)  return 'Neutral';
+  if (val <= 80)  return 'Gier';
+  return 'Extreme Gier';
+}
+
+function drawFngGauge(val) {
+  const canvas = document.getElementById('fngGauge');
+  const ctx    = canvas.getContext('2d');
+  const dpr    = window.devicePixelRatio || 1;
+  const W = 180, H = 100;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W / 2, cy = H - 6;
+  const r  = 78, sw = 14;
+  const startA = Math.PI, endA = 2 * Math.PI;
+
+  // Background arc
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startA, endA);
+  ctx.strokeStyle = '#1a2538';
+  ctx.lineWidth   = sw;
+  ctx.lineCap     = 'butt';
+  ctx.stroke();
+
+  // Colored segments (5 zones)
+  const zones = [
+    { from: 0,  to: 20,  color: '#f24060' },
+    { from: 20, to: 40,  color: '#f07830' },
+    { from: 40, to: 60,  color: '#f7931a' },
+    { from: 60, to: 80,  color: '#a0c840' },
+    { from: 80, to: 100, color: '#11e88c' },
+  ];
+  zones.forEach(z => {
+    const a0 = startA + (z.from / 100) * Math.PI;
+    const a1 = startA + (z.to   / 100) * Math.PI;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, a0, a1);
+    ctx.strokeStyle = z.color + '55';
+    ctx.lineWidth   = sw;
+    ctx.stroke();
+  });
+
+  // Value arc
+  const valA = startA + (val / 100) * Math.PI;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startA, valA);
+  ctx.strokeStyle = fngColor(val);
+  ctx.lineWidth   = sw;
+  ctx.lineCap     = 'round';
+  ctx.stroke();
+
+  // Needle
+  const needleA = startA + (val / 100) * Math.PI;
+  const nx = cx + (r - 2) * Math.cos(needleA);
+  const ny = cy + (r - 2) * Math.sin(needleA);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(nx, ny);
+  ctx.strokeStyle = '#dde4f0';
+  ctx.lineWidth   = 2;
+  ctx.lineCap     = 'round';
+  ctx.stroke();
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#dde4f0';
+  ctx.fill();
+}
+
+function drawFngHistory(history) {
+  const canvas = document.getElementById('fngHistory');
+  const ctx    = canvas.getContext('2d');
+  const parent = canvas.parentElement;
+  const W      = parent.clientWidth - 48;
+  const H      = 120;
+  const dpr    = window.devicePixelRatio || 1;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const N   = history.length;
+  const pad = { t: 8, r: 8, b: 28, l: 8 };
+  const pw  = W - pad.l - pad.r;
+  const ph  = H - pad.t - pad.b;
+
+  const xOf = i   => pad.l + (i / (N - 1)) * pw;
+  const yOf = val => pad.t + ph * (1 - val / 100);
+
+  // Zone bands
+  const bands = [
+    { from: 0,  to: 25, color: 'rgba(242,64,96,0.06)'   },
+    { from: 25, to: 46, color: 'rgba(240,120,48,0.05)'  },
+    { from: 46, to: 54, color: 'rgba(247,147,26,0.05)'  },
+    { from: 54, to: 75, color: 'rgba(160,200,64,0.05)'  },
+    { from: 75, to: 100,color: 'rgba(17,232,140,0.06)'  },
+  ];
+  bands.forEach(b => {
+    ctx.fillStyle = b.color;
+    ctx.fillRect(pad.l, yOf(b.to), pw, yOf(b.from) - yOf(b.to));
+  });
+
+  // Center line at 50
+  ctx.beginPath();
+  ctx.moveTo(pad.l, yOf(50));
+  ctx.lineTo(pad.l + pw, yOf(50));
+  ctx.strokeStyle = '#243248';
+  ctx.lineWidth   = 1;
+  ctx.stroke();
+
+  // Gradient fill under curve
+  const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ph);
+  grad.addColorStop(0, 'rgba(247,147,26,0.18)');
+  grad.addColorStop(1, 'rgba(247,147,26,0)');
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(history[0].value));
+  history.forEach((d, i) => ctx.lineTo(xOf(i), yOf(d.value)));
+  ctx.lineTo(xOf(N - 1), pad.t + ph);
+  ctx.lineTo(xOf(0), pad.t + ph);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(history[0].value));
+  history.forEach((d, i) => ctx.lineTo(xOf(i), yOf(d.value)));
+  ctx.strokeStyle = '#f7931a';
+  ctx.lineWidth   = 2;
+  ctx.lineJoin    = 'round';
+  ctx.stroke();
+
+  // Colored dots at each bar
+  history.forEach((d, i) => {
+    ctx.beginPath();
+    ctx.arc(xOf(i), yOf(d.value), 3, 0, Math.PI * 2);
+    ctx.fillStyle = fngColor(d.value);
+    ctx.fill();
+  });
+
+  // X-axis labels (first, mid, last)
+  ctx.fillStyle  = '#46566e';
+  ctx.font       = '10px system-ui, sans-serif';
+  ctx.textAlign  = 'center';
+  const labelIdx = [0, Math.floor(N/2), N - 1];
+  labelIdx.forEach(i => {
+    const d   = new Date(history[i].timestamp * 1000);
+    const lbl = d.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
+    ctx.fillText(lbl, xOf(i), H - 6);
+  });
+}
+
+async function loadFearGreed() {
+  try {
+    const r = await fetch('https://api.alternative.me/fng/?limit=30&format=json');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const json = await r.json();
+    const data = json.data; // newest first
+
+    const today = data[0];
+    const val   = parseInt(today.value, 10);
+    const color = fngColor(val);
+
+    const fngValEl    = document.getElementById('fngValue');
+    const fngStatusEl = document.getElementById('fngStatus');
+    fngValEl.textContent    = val;
+    fngValEl.style.color    = color;
+    fngStatusEl.textContent = fngLabel(val);
+
+    drawFngGauge(val);
+
+    // History: reverse so oldest → newest left→right
+    const history = [...data].reverse().map(d => ({
+      value:     parseInt(d.value, 10),
+      timestamp: parseInt(d.timestamp, 10),
+    }));
+    window._fngHistory = history;
+    drawFngHistory(history);
+
+  } catch (e) {
+    document.getElementById('fngValue').textContent  = '–';
+    document.getElementById('fngStatus').textContent = 'Nicht verfügbar';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  NEWS FEED (CoinGecko News API)
+// ════════════════════════════════════════════════════════════
+
+function relativeTime(dateStr) {
+  const now  = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = Math.floor((now - then) / 1000);
+  if (diff <  60)   return 'Gerade eben';
+  if (diff < 3600)  return Math.floor(diff / 60) + ' Min. ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' Std. ago';
+  return Math.floor(diff / 86400) + ' Tage ago';
+}
+
+// Simple keyword-based sentiment
+function guessSentiment(title) {
+  const t = title.toLowerCase();
+  const bull = ['surge','rally','breakout','bullish','all-time high','ath','rise','gain','pump','soar','jump','record','bull','adoption','inflow','etf approved','buy'];
+  const bear = ['crash','fall','drop','bear','sell','bearish','fear','hack','ban','regulation','outflow','liquidation','dump','decline','loss','plunge','collapse'];
+  if (bull.some(w => t.includes(w))) return 'bullish';
+  if (bear.some(w => t.includes(w))) return 'bearish';
+  return 'neutral';
+}
+
+function sentimentDE(s) {
+  if (s === 'bullish') return 'Bullish';
+  if (s === 'bearish') return 'Bearish';
+  return 'Neutral';
+}
+
+async function loadNews() {
+  const grid = document.getElementById('newsGrid');
+  grid.innerHTML = '<div class="news-loading"><div class="spinner"></div><span>News werden geladen…</span></div>';
+
+  try {
+    // CoinGecko public news endpoint (no key needed)
+    const r = await fetch('https://api.coingecko.com/api/v3/news?per_page=9');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const json = await r.json();
+
+    const articles = (json.data || json).slice(0, 9);
+    if (!articles.length) throw new Error('Keine Artikel');
+
+    grid.innerHTML = articles.map(a => {
+      const sent    = guessSentiment(a.title || '');
+      const source  = (a.news_site || a.author || 'Crypto News').slice(0, 30);
+      const timeStr = relativeTime(a.created_at || a.published_at || new Date().toISOString());
+      return `
+        <a class="news-card" href="${a.url || '#'}" target="_blank" rel="noopener">
+          <div class="news-card-meta">
+            <div class="news-source-name">${source}</div>
+            <div class="news-time">${timeStr}</div>
+          </div>
+          <div class="news-card-title">${a.title || 'Kein Titel'}</div>
+          <div class="news-sentiment-tag ${sent}">${sentimentDE(sent)}</div>
+        </a>`;
+    }).join('');
+
+  } catch (e) {
+    // Fallback: CryptoPanic via allorigins proxy
+    try {
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' +
+        encodeURIComponent('https://cryptopanic.com/api/v1/posts/?auth_token=free&currencies=BTC&public=true');
+      const r2   = await fetch(proxyUrl);
+      const json = await r2.json();
+      const articles = (json.results || []).slice(0, 9);
+      if (!articles.length) throw new Error('Keine Artikel');
+
+      grid.innerHTML = articles.map(a => {
+        const sent    = guessSentiment(a.title || '');
+        const source  = (a.source?.title || 'Crypto News').slice(0, 30);
+        const timeStr = relativeTime(a.published_at || new Date().toISOString());
+        return `
+          <a class="news-card" href="${a.url || '#'}" target="_blank" rel="noopener">
+            <div class="news-card-meta">
+              <div class="news-source-name">${source}</div>
+              <div class="news-time">${timeStr}</div>
+            </div>
+            <div class="news-card-title">${a.title || 'Kein Titel'}</div>
+            <div class="news-sentiment-tag ${sent}">${sentimentDE(sent)}</div>
+          </a>`;
+      }).join('');
+    } catch {
+      grid.innerHTML = '<div class="news-loading" style="color:var(--muted)">News momentan nicht verfügbar</div>';
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
+load('1');
+loadFearGreed();
+loadNews();
+</script>
+
+</body>
+</html>

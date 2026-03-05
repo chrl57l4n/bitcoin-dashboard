@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Dark background -->
+    <path
+        android:fillColor="#070a0f"
+        android:pathData="M0,0h108v108h-108z" />
+
+    <!-- Bitcoin orange circle -->
+    <path
+        android:fillColor="#f7931a"
+        android:pathData="M54,20 a34,34 0 1,0 0,68 a34,34 0 1,0 0,-68z" />
+
+    <!-- ₿ Symbol (vereinfacht) -->
+    <path
+        android:fillColor="#1a0800"
+        android:pathData="M47,32 L47,76 M61,32 L61,76
+                          M47,42 Q68,42 68,50 Q68,58 47,58
+                          M47,58 Q70,58 70,67 Q70,76 47,76
+                          M44,32 L64,32 M44,76 L64,76
+                          M44,52 L62,52"
+        android:strokeColor="#1a0800"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+</vector>

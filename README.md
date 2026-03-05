@@ -1,132 +1,76 @@
-# ₿ Bitcoin Dashboard — Android App
-
-Eine native Android-App für das Bitcoin Dashboard, optimiert für **Snapdragon 8** (arm64-v8a).
-
----
-
-## 📱 Features
-
-- **Live Bitcoin-Preis** via Binance WebSocket (Echtzeit)
-- **Fear & Greed Index** mit Gauge-Anzeige und 30-Tage-Verlauf
-- **Sentiment-Analyse** (Retail / Institutional / IBIT)
-- **Blocktrainer News Feed** — aktuelle Bitcoin-Nachrichten auf Deutsch
-- **Interaktive Charts** mit Timeframe-Auswahl (Stunden / Tage / Wochen / Jahre)
-- Swipe-to-Refresh zum manuellen Aktualisieren
-- Dark Theme optimiert für OLED-Displays
+# ₿ Bitcoin Dashboard – Android App
+### Optimiert für Snapdragon 8 (arm64-v8a)
 
 ---
 
-## 🛠️ Tech Stack
+## 🚀 Setup in Android Studio
 
-| Komponente | Technologie |
+1. **Projekt öffnen**
+   - Android Studio starten → `File → Open` → diesen Ordner wählen
+
+2. **Gradle Sync abwarten** (ca. 1–2 Min beim ersten Start)
+
+3. **Gerät verbinden** (USB-Debugging aktivieren)
+   - Einstellungen → Entwickleroptionen → USB-Debugging: AN
+
+4. **App starten** → ▶️ Run
+
+---
+
+## 📱 Anforderungen
+
+| Eigenschaft | Wert |
 |---|---|
-| App-Wrapper | Kotlin + Android WebView |
-| Frontend | HTML5 / CSS3 / Vanilla JS |
-| Preis-API | Binance WebSocket |
-| Fear & Greed | alternative.me API |
-| News | Blocktrainer RSS Feed |
-| GPU-Rendering | Adreno (Snapdragon-optimiert) |
+| Min. Android | 10 (API 29) |
+| Ziel-Android | 14 (API 34) |
+| Architektur | arm64-v8a (Snapdragon 8) |
+| Gradle | 8.6 |
+| AGP | 8.4.2 |
+| Kotlin | 1.9.24 |
 
 ---
 
-## 🚀 APK bauen
+## ⚡ Snapdragon 8 Optimierungen
 
-### Option 1 — GitHub Actions (empfohlen, kein Setup nötig)
-
-1. Repository auf GitHub erstellen
-2. Diesen Ordner pushen:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin https://github.com/DEIN-USER/bitcoin-dashboard.git
-   git push -u origin main
-   ```
-3. GitHub → **Actions** Tab → Build startet automatisch (~3–5 Min)
-4. Fertiger APK unter **Actions → Artifacts → BitcoinDashboard-APK** herunterladen
-
-### Option 2 — Lokal mit Android Studio
-
-**Voraussetzungen:**
-- Android Studio Hedgehog oder neuer
-- JDK 17
-- Android SDK (API 34)
-
-**Schritte:**
-1. Projekt öffnen: `File → Open` → diesen Ordner auswählen
-2. Gradle sync abwarten
-3. Gerät anschließen oder Emulator starten
-4. `Run → Run 'app'` (▶️)
+- **arm64-v8a only** – kein x86/x86_64 Overhead
+- **Hardware-Accelerated WebView** – Adreno GPU für Canvas/WebGL-Charts
+- **RenderPriority.HIGH** – priorisiertes Rendering
+- **Edge-to-Edge** – Punch-hole Display & curved screen Support
+- **ProGuard R8** – minimierte APK-Größe
 
 ---
 
-## 📲 APK installieren
+## 🔌 API-Verbindungen
 
-1. APK-Datei auf das Android-Gerät übertragen (USB oder Cloud)
-2. Einstellungen → Sicherheit → **Installation aus unbekannten Quellen** aktivieren
-3. APK-Datei antippen und installieren
-
-> ⚠️ Die App ist nicht signiert (Debug-Build). Für eine Release-Version muss ein Keystore eingerichtet werden.
-
----
-
-## 📁 Projektstruktur
-
-```
-BitcoinApp/
-├── .github/
-│   └── workflows/
-│       └── build.yml          # GitHub Actions CI/CD
-├── app/
-│   └── src/main/
-│       ├── assets/
-│       │   └── index.html     # Bitcoin Dashboard (HTML/JS/CSS)
-│       ├── java/de/bitcoindashboard/
-│       │   └── MainActivity.kt
-│       ├── res/
-│       │   ├── layout/        # XML Layouts
-│       │   ├── values/        # Themes, Colors, Strings
-│       │   └── xml/           # Network Security Config
-│       └── AndroidManifest.xml
-├── gradle/
-│   └── libs.versions.toml     # Dependency Versions
-├── build.gradle.kts
-└── settings.gradle.kts
-```
-
----
-
-## ⚙️ Snapdragon 8 Optimierungen
-
-- **ABI Filter:** Nur `arm64-v8a` (kein unnötiger x86-Code)
-- **Hardware-Beschleunigung:** Adreno GPU via `LAYER_TYPE_HARDWARE`
-- **R8 Minification:** Aktiviert für kleinere APK-Größe
-- **RenderPriority.HIGH:** Für flüssiges Chart-Rendering
-
----
-
-## 🔒 Netzwerk-Whitelist
-
-Folgende Domains sind in der `network_security_config.xml` freigegeben:
-
-| Domain | Zweck |
+| Service | URL |
 |---|---|
-| `api.binance.com` / `stream.binance.com` | Live-Preisdaten |
-| `alternative.me` | Fear & Greed Index |
-| `blocktrainer.de` | News RSS Feed |
-| `query1.finance.yahoo.com` | Historische Kursdaten |
-| `allorigins.win` / `corsproxy.io` | CORS-Proxy für RSS |
+| Binance (Kurse) | `api.binance.com` |
+| Fear & Greed | `api.alternative.me` |
+| Blocktrainer RSS | `blocktrainer.de/feed/` |
+| IBIT ETF | `query2.finance.yahoo.com` |
 
 ---
 
-## 📋 Anforderungen
+## 🛠️ APK Release bauen
 
-- Android 10+ (API Level 29)
-- Snapdragon 8 empfohlen (läuft auch auf anderen ARM64-Geräten)
-- Internetverbindung erforderlich
+```bash
+./gradlew assembleRelease
+```
+APK liegt dann unter: `app/build/outputs/apk/release/`
+
+> **Hinweis:** Für den Play Store muss die APK noch signiert werden.
+> `Build → Generate Signed Bundle / APK`
 
 ---
 
-## 📄 Lizenz
+## 📲 JavaScript Bridge
 
-Privates Projekt — kein öffentliches Release.
+Die App stellt native Android-Funktionen für die WebApp bereit:
+
+```javascript
+// Aus dem HTML/JS heraus aufrufen:
+window.Android.showToast("Nachricht");
+window.Android.copyToClipboard("$95,000");
+window.Android.isAndroid();       // → true
+window.Android.getDeviceInfo();   // → "Snapdragon 8 | Android 14"
+```

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="btc_orange">#f7931a</color>
-    <color name="btc_dark">#070a0f</color>
-    <color name="btc_dark2">#0c1119</color>
-    <color name="btc_green">#11e88c</color>
-    <color name="btc_red">#f24060</color>
-    <color name="btc_text">#dde4f0</color>
-</resources>
